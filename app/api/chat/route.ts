@@ -48,27 +48,14 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    let aliases: IntegrationAliases = {};
     let isToolUseNeeded = false;
-    let message = "";
-    let history: BaseMessage[] = [];
 
     const {
-      message: msg,
-      aliases: als,
-      history: hist,
+      message,
+      aliases,
+      history
     } = parsed.data;
-    message = msg;
-    aliases = als;
-    if (hist) {
-      history = hist.map((message) => {
-        if (message.role === "user") {
-          return new HumanMessage(message.content);
-        } else {
-          return new SystemMessage(message.content);
-        }
-      });
-    }
+    
     if (USE_TOOLS) {
       console.log("checking tool use intent");
       isToolUseNeeded = await checkToolUseIntent(message);
@@ -76,16 +63,17 @@ export async function POST(req: NextRequest) {
 
     if (!isToolUseNeeded) {
       console.log("handling as a general chat");
-      const chatResponse = await llm.invoke([
+      const prompt = [
         new SystemMessage(
           SYSTEM_MESSAGES.LANGUAGE_LEARNING_CONVERSATION(
             "league of legends, artificial intelligence, calisthenics.",
             JSON.stringify(history),
           ),
         ),
-        ...history,
         new HumanMessage(message),
-      ]);
+      ];
+      console.log(prompt);
+      const chatResponse = await llm.invoke(prompt);
       return NextResponse.json({
         content: chatResponse.content,
       });

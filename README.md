@@ -132,14 +132,6 @@ npm run lint         # Run ESLint
 - **useSpeechRecognition**: Manages voice input with debouncing
 - **API Routes**: Handle chat processing and TTS generation
 
-## Contributing
-
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Test thoroughly
-5. Submit a pull request
-
 ## License
 
 This project is licensed under the Apache License.

@@ -94,10 +94,9 @@ export function ChatInput({
           </Button>
         </form>
         <p className="text-xs text-zinc-400">
-          Made with 🤍 by Shrijal Acharya @shricodev
+          Made with 🤍 by Giacomo Mantovani
         </p>
       </div>
     </footer>
   );
 }
-
