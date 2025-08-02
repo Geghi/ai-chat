@@ -107,44 +107,40 @@ export function ChatInterface() {
         <ChatMessages messages={messages} isLoading={isLoading} />
       </main>
 
-      <footer className="bottom-0 left-0 right-0 bg-white">
-        <div className="flex  flex-col items-center justify-center pb-4">
-          <div className="flex items-center justify-center">
-            <Button
-              type="button"
-              onClick={handlePhoneClick}
-              size="icon"
-              variant="ghost"
-              className={`mr-2 size-9 rounded-full transition-all duration-200 ${
-                isCalling
-                  ? "bg-red-500 hover:bg-red-600 text-white shadow-lg scale-105"
-                  : "bg-zinc-200 hover:bg-zinc-300 text-zinc-700 hover:scale-105"
-              }`}
-              aria-label={isCalling ? "End Call" : "Start Call"}
-              disabled={!browserSupportsSpeechRecognition}
-            >
-              <Phone size={18} />
-            </Button>
-            <ChatInput
-              onSubmit={handleInputSubmit}
-              transcript={transcript}
-              listening={listening}
-              isLoading={isLoading}
-              browserSupportsSpeechRecognition={
-                browserSupportsSpeechRecognition
-              }
-              onMicClick={handleMicClick}
-              isCalling={isCalling}
-              isPlaying={isPlaying}
-              onStopAudio={stopAudio}
-            />
-          </div>
-
-          <p className="text-xs text-zinc-400">
-            Made with 🤍 by Giacomo Mantovani
-          </p>
+      <div className="flex flex-col items-center justify-center pb-4 w-full">
+        <div className="flex items-center justify-center w-full px-4">
+          <Button
+            type="button"
+            onClick={handlePhoneClick}
+            size="icon"
+            variant="ghost"
+            className={`mr-2 size-9 rounded-full transition-all duration-200 ${
+              isCalling
+                ? "bg-red-500 hover:bg-red-600 text-white shadow-lg scale-105"
+                : "bg-zinc-200 hover:bg-zinc-300 text-zinc-700 hover:scale-105"
+            }`}
+            aria-label={isCalling ? "End Call" : "Start Call"}
+            disabled={!browserSupportsSpeechRecognition}
+          >
+            <Phone size={18} />
+          </Button>
+          <ChatInput
+            onSubmit={handleInputSubmit}
+            transcript={transcript}
+            listening={listening}
+            isLoading={isLoading}
+            browserSupportsSpeechRecognition={browserSupportsSpeechRecognition}
+            onMicClick={handleMicClick}
+            isCalling={isCalling}
+            isPlaying={isPlaying}
+            onStopAudio={stopAudio}
+          />
         </div>
-      </footer>
+
+        <p className="text-xs text-zinc-400">
+          Made with 🤍 by Giacomo Mantovani
+        </p>
+      </div>
     </div>
   );
 }
