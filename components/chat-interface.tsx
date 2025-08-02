@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback } from "react";
+import { useCallback, useState } from "react";
 import { useMounted } from "@/hooks/use-mounted";
 import { useChat } from "@/hooks/use-chat";
 import { useAudio } from "@/hooks/use-audio";
@@ -8,6 +8,8 @@ import { useSpeechRecognitionWithDebounce } from "@/hooks/use-speech-recognition
 import { ChatHeader } from "@/components/chat-header";
 import { ChatMessages } from "@/components/chat-messages";
 import { ChatInput } from "@/components/chat-input";
+import { Button } from "@/components/ui/button";
+import { Phone } from "lucide-react";
 
 export function ChatInterface() {
   const hasMounted = useMounted();
@@ -21,18 +23,27 @@ export function ChatInterface() {
         await playAudio(botMessage.content);
       }
     },
-    [sendMessage, playAudio],
+    [sendMessage, playAudio]
   );
+
+  const onUserSpeech = useCallback(() => {
+    stopAudio();
+  }, [stopAudio]);
 
   const {
     transcript,
     listening,
+    isCalling,
     resetTranscript,
     browserSupportsSpeechRecognition,
     startListening,
     stopListening,
+    startCall,
+    stopCall,
   } = useSpeechRecognitionWithDebounce({
     onTranscriptComplete: handleProcessMessage,
+    onUserSpeech,
+    isPlaying,
   });
 
   const handleMicClick = () => {
@@ -40,6 +51,14 @@ export function ChatInterface() {
       stopListening();
     } else {
       startListening();
+    }
+  };
+
+  const handlePhoneClick = () => {
+    if (isCalling) {
+      stopCall();
+    } else {
+      startCall();
     }
   };
 
@@ -72,6 +91,7 @@ export function ChatInterface() {
           isLoading={isLoading}
           browserSupportsSpeechRecognition={false}
           onMicClick={handleMicClick}
+          isCalling={isCalling}
           isPlaying={isPlaying}
           onStopAudio={stopAudio}
         />
@@ -87,16 +107,44 @@ export function ChatInterface() {
         <ChatMessages messages={messages} isLoading={isLoading} />
       </main>
 
-      <ChatInput
-        onSubmit={handleInputSubmit}
-        transcript={transcript}
-        listening={listening}
-        isLoading={isLoading}
-        browserSupportsSpeechRecognition={browserSupportsSpeechRecognition}
-        onMicClick={handleMicClick}
-        isPlaying={isPlaying}
-        onStopAudio={stopAudio}
-      />
+      <footer className="bottom-0 left-0 right-0 bg-white">
+        <div className="flex  flex-col items-center justify-center pb-4">
+          <div className="flex items-center justify-center">
+            <Button
+              type="button"
+              onClick={handlePhoneClick}
+              size="icon"
+              variant="ghost"
+              className={`mr-2 size-9 rounded-full transition-all duration-200 ${
+                isCalling
+                  ? "bg-red-500 hover:bg-red-600 text-white shadow-lg scale-105"
+                  : "bg-zinc-200 hover:bg-zinc-300 text-zinc-700 hover:scale-105"
+              }`}
+              aria-label={isCalling ? "End Call" : "Start Call"}
+              disabled={!browserSupportsSpeechRecognition}
+            >
+              <Phone size={18} />
+            </Button>
+            <ChatInput
+              onSubmit={handleInputSubmit}
+              transcript={transcript}
+              listening={listening}
+              isLoading={isLoading}
+              browserSupportsSpeechRecognition={
+                browserSupportsSpeechRecognition
+              }
+              onMicClick={handleMicClick}
+              isCalling={isCalling}
+              isPlaying={isPlaying}
+              onStopAudio={stopAudio}
+            />
+          </div>
+
+          <p className="text-xs text-zinc-400">
+            Made with 🤍 by Giacomo Mantovani
+          </p>
+        </div>
+      </footer>
     </div>
   );
 }

@@ -10,6 +10,7 @@ interface ChatInputProps {
   isLoading: boolean;
   browserSupportsSpeechRecognition: boolean;
   onMicClick: () => void;
+  isCalling: boolean;
   isPlaying: boolean;
   onStopAudio: () => void;
 }
@@ -21,6 +22,7 @@ export function ChatInput({
   isLoading,
   browserSupportsSpeechRecognition,
   onMicClick,
+  isCalling,
   isPlaying,
   onStopAudio,
 }: ChatInputProps) {
@@ -39,8 +41,8 @@ export function ChatInput({
   };
 
   return (
-    <footer className="fixed bottom-0 left-0 right-0 bg-white">
-      <div className="flex flex-col items-center pb-4">
+    <footer className=" bottom-0 left-0 right-0 bg-white">
+      <div className="flex flex-col items-center">
         <form
           onSubmit={handleSubmit}
           className="flex items-center w-full md:max-w-[640px] max-w-[calc(100dvw-32px)] bg-zinc-100 rounded-full px-4 py-2 my-2 border"
@@ -52,21 +54,23 @@ export function ChatInput({
             onChange={(e) => setInputValue(e.target.value)}
             disabled={listening}
           />
-          <Button
-            type="button"
-            onClick={onMicClick}
-            size="icon"
-            variant="ghost"
-            className={`ml-2 size-9 rounded-full transition-all duration-200 ${
-              listening
-                ? "bg-red-500 hover:bg-red-600 text-white shadow-lg scale-105"
-                : "bg-zinc-200 hover:bg-zinc-300 text-zinc-700 hover:scale-105"
-            }`}
-            aria-label={listening ? "Stop Listening" : "Start Listening"}
-            disabled={!browserSupportsSpeechRecognition}
-          >
-            <MicIcon size={18} />
-          </Button>
+          {!isCalling && (
+            <Button
+              type="button"
+              onClick={onMicClick}
+              size="icon"
+              variant="ghost"
+              className={`ml-2 size-9 rounded-full transition-all duration-200 ${
+                listening
+                  ? "bg-red-500 hover:bg-red-600 text-white shadow-lg scale-105"
+                  : "bg-zinc-200 hover:bg-zinc-300 text-zinc-700 hover:scale-105"
+              }`}
+              aria-label={listening ? "Stop Listening" : "Start Listening"}
+              disabled={!browserSupportsSpeechRecognition}
+            >
+              <MicIcon size={18} />
+            </Button>
+          )}
           {isPlaying && (
             <Button
               type="button"
@@ -93,9 +97,6 @@ export function ChatInput({
             <SendIcon size={18} />
           </Button>
         </form>
-        <p className="text-xs text-zinc-400">
-          Made with 🤍 by Giacomo Mantovani
-        </p>
       </div>
     </footer>
   );

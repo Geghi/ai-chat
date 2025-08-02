@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useDebounce } from "use-debounce";
 import SpeechRecognition, {
   useSpeechRecognition,
@@ -7,12 +7,16 @@ import { CONFIG } from "@/lib/constants";
 
 interface UseSpeechRecognitionWithDebounceProps {
   onTranscriptComplete: (transcript: string) => void;
+  onUserSpeech: () => void;
   debounceMs?: number;
+  isPlaying: boolean;
 }
 
 export const useSpeechRecognitionWithDebounce = ({
   onTranscriptComplete,
+  onUserSpeech,
   debounceMs = CONFIG.SPEECH_DEBOUNCE_MS,
+  isPlaying,
 }: UseSpeechRecognitionWithDebounceProps) => {
   const {
     transcript,
@@ -23,6 +27,13 @@ export const useSpeechRecognitionWithDebounce = ({
 
   const [debouncedTranscript] = useDebounce(transcript, debounceMs);
   const lastProcessedTranscript = useRef<string>("");
+  const [isCalling, setIsCalling] = useState(false);
+
+  useEffect(() => {
+    if (transcript && isPlaying) {
+      onUserSpeech();
+    }
+  }, [transcript, isPlaying, onUserSpeech]);
 
   useEffect(() => {
     if (
@@ -31,11 +42,19 @@ export const useSpeechRecognitionWithDebounce = ({
       listening
     ) {
       lastProcessedTranscript.current = debouncedTranscript;
-      SpeechRecognition.stopListening();
       onTranscriptComplete(debouncedTranscript);
       resetTranscript();
+      if (!isCalling) {
+        SpeechRecognition.stopListening();
+      }
     }
-  }, [debouncedTranscript, listening, onTranscriptComplete, resetTranscript]);
+  }, [
+    debouncedTranscript,
+    listening,
+    onTranscriptComplete,
+    resetTranscript,
+    isCalling,
+  ]);
 
   const startListening = () => {
     resetTranscript();
@@ -47,13 +66,25 @@ export const useSpeechRecognitionWithDebounce = ({
     SpeechRecognition.stopListening();
   };
 
+  const startCall = () => {
+    setIsCalling(true);
+    startListening();
+  };
+
+  const stopCall = () => {
+    setIsCalling(false);
+    stopListening();
+  };
+
   return {
     transcript,
     listening,
+    isCalling,
     resetTranscript,
     browserSupportsSpeechRecognition,
     startListening,
     stopListening,
+    startCall,
+    stopCall,
   };
 };
-
