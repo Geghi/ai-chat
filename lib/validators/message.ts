@@ -10,6 +10,15 @@ export const messageSchema = z.object({
       }),
     ),
   ),
+  history: z
+    .array(
+      z.object({
+        id: z.string(),
+        role: z.enum(["user", "assistant"]),
+        content: z.string(),
+      }),
+    )
+    .optional(),
 });
 
 export type TMessageSchema = z.infer<typeof messageSchema>;

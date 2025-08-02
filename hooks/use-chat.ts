@@ -21,14 +21,22 @@ export const useChat = () => {
         role: "user",
         content: text,
       };
-      setMessages((prev) => [...prev, userMessage]);
+
+      const newMessages: Message[] = [...messages, userMessage];
+      const last5Messages = newMessages.slice(-6, -1);
+
+      setMessages(newMessages);
       setIsLoading(true);
 
       try {
         const response = await fetch("/api/chat", {
           method: "POST",
           headers: { "content-type": "application/json" },
-          body: JSON.stringify({ message: text, aliases }),
+          body: JSON.stringify({
+            message: text,
+            aliases,
+            history: last5Messages,
+          }),
         });
         if (!response.ok) throw new Error("Failed to generate response");
 
@@ -55,7 +63,7 @@ export const useChat = () => {
         setIsLoading(false);
       }
     },
-    [aliases, isLoading],
+    [aliases, isLoading, messages],
   );
 
   return {

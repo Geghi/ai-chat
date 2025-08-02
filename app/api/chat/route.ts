@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { OpenAIToolSet } from "composio-core";
-import { Alias } from "@/lib/alias-store";
+import { Alias, IntegrationAliases  } from "@/lib/alias-store";
 import {
   SystemMessage,
   HumanMessage,
@@ -17,12 +17,13 @@ import { handleApiError, logError } from "@/lib/error-handler";
 
 const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
 const COMPOSIO_API_KEY = process.env.COMPOSIO_API_KEY;
+const USE_TOOLS = process.env.USE_TOOLS === "true";
 
 if (!OPENAI_API_KEY) {
   throw new Error("OPENAI_API_KEY environment variable is not set");
 }
 
-if (!COMPOSIO_API_KEY) {
+if (!COMPOSIO_API_KEY && USE_TOOLS) {
   throw new Error("COMPOSIO_API_KEY environment variable is not set");
 }
 
@@ -47,14 +48,46 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const { message, aliases } = parsed.data;
-    const isToolUseNeeded = await checkToolUseIntent(message);
+    let aliases: IntegrationAliases = {};
+    let isToolUseNeeded = false;
+    let message = "";
+    let history: BaseMessage[] = [];
+
+    const {
+      message: msg,
+      aliases: als,
+      history: hist,
+    } = parsed.data;
+    message = msg;
+    aliases = als;
+    if (hist) {
+      history = hist.map((message) => {
+        if (message.role === "user") {
+          return new HumanMessage(message.content);
+        } else {
+          return new SystemMessage(message.content);
+        }
+      });
+    }
+    if (USE_TOOLS) {
+      console.log("checking tool use intent");
+      isToolUseNeeded = await checkToolUseIntent(message);
+    }
 
     if (!isToolUseNeeded) {
       console.log("handling as a general chat");
-      const chatResponse = await llm.invoke([new HumanMessage(message)]);
+      const chatResponse = await llm.invoke([
+        new SystemMessage(
+          SYSTEM_MESSAGES.LANGUAGE_LEARNING_CONVERSATION(
+            "league of legends, artificial intelligence, calisthenics.",
+            JSON.stringify(history),
+          ),
+        ),
+        ...history,
+        new HumanMessage(message),
+      ]);
       return NextResponse.json({
-        content: chatResponse.text,
+        content: chatResponse.content,
       });
     }
 
