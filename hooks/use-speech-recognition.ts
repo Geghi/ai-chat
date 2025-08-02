@@ -59,7 +59,11 @@ export const useSpeechRecognitionWithDebounce = ({
   const startListening = () => {
     resetTranscript();
     lastProcessedTranscript.current = "";
-    SpeechRecognition.startListening({ continuous: true });
+    SpeechRecognition.startListening({
+      continuous: true,
+      // @ts-ignore
+      echoCancellation: true,
+    });
   };
 
   const stopListening = () => {
