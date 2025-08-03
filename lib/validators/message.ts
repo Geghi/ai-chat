@@ -19,6 +19,8 @@ export const messageSchema = z.object({
       }),
     )
     .optional(),
+  interests: z.array(z.string()).optional(),
+  language: z.string().optional(),
 });
 
 export type TMessageSchema = z.infer<typeof messageSchema>;

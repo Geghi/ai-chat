@@ -1,9 +1,10 @@
 "use client";
 
-import { useCallback, useState } from "react";
+import { useCallback } from "react";
 import { useMounted } from "@/hooks/use-mounted";
-import { useChat } from "@/hooks/use-chat";
+import { Message, useChat } from "@/hooks/use-chat";
 import { useAudio } from "@/hooks/use-audio";
+import { useSettingsStore } from "@/lib/settings-store";
 // import { useSpeechRecognitionWithDebounce } from "@/hooks/use-speech-recognition";
 import { useSpeechRecognitionWithGoogle } from "@/hooks/use-speech-recognition-google";
 import { ChatHeader } from "@/components/chat-header";
@@ -16,29 +17,33 @@ export function ChatInterfaceComponent() {
   const hasMounted = useMounted();
   const { messages, isLoading, sendMessage, updateMessage } = useChat();
   const { playAudio, stopAudio, isPlaying, playAudioFromUrl } = useAudio();
+  const { isTtsEnabled } = useSettingsStore();
 
   const handleProcessMessage = useCallback(
     async (text: string) => {
       const botMessage = await sendMessage(text);
-      if (botMessage) {
+      if (botMessage && isTtsEnabled) {
         const filename = await playAudio(botMessage.content);
         if (filename) {
           updateMessage({ ...botMessage, audioFilename: filename });
         }
       }
     },
-    [sendMessage, playAudio, updateMessage]
+    [sendMessage, playAudio, updateMessage, isTtsEnabled]
   );
 
   const handleReplayAudio = useCallback(
-    (message: { content: string; audioFilename?: string }) => {
+    async (message: Message) => {
       if (message.audioFilename) {
         playAudioFromUrl(`/api/audio/${message.audioFilename}`);
       } else {
-        playAudio(message.content);
+        const filename = await playAudio(message.content);
+        if (filename) {
+          updateMessage({ ...message, audioFilename: filename });
+        }
       }
     },
-    [playAudio, playAudioFromUrl]
+    [playAudio, playAudioFromUrl, updateMessage]
   );
 
   const onUserSpeech = useCallback(() => {

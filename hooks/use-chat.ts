@@ -1,5 +1,6 @@
 import { useState, useCallback } from "react";
 import { useAliasStore } from "@/lib/alias-store";
+import { useSettingsStore } from "@/lib/settings-store";
 
 export interface Message {
   id: string;
@@ -12,6 +13,7 @@ export const useChat = () => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const { aliases } = useAliasStore();
+  const { interests, language } = useSettingsStore();
 
   const sendMessage = useCallback(
     async (text: string): Promise<Message | null> => {
@@ -37,6 +39,8 @@ export const useChat = () => {
             message: text,
             aliases,
             history: last5Messages,
+            interests,
+            language,
           }),
         });
         const result = await response.json();
@@ -56,7 +60,7 @@ export const useChat = () => {
         return botMessage;
       } catch (err) {
         const error = err instanceof Error ? err : new Error("An unknown error occurred");
-        console.error("Error generating response:", error);
+        console.error("Error generating response:", err);
         const errorMessage: Message = {
           id: (Date.now() + 1).toString(),
           role: "assistant",
@@ -69,7 +73,7 @@ export const useChat = () => {
         setIsLoading(false);
       }
     },
-    [aliases, isLoading, messages],
+    [aliases, isLoading, messages, interests, language],
   );
 
   const updateMessage = useCallback((updatedMessage: Message) => {

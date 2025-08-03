@@ -64,7 +64,7 @@ export function ChatMessages({
             <div className="text-zinc-800 leading-relaxed">
               {message.content}
             </div>
-            {message.role === "assistant" && message.audioFilename && (
+            {message.role === "assistant" && (
               <Button
                 type="button"
                 onClick={() => onReplayAudio(message)}

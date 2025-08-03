@@ -14,12 +14,30 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
+import { Switch } from "@/components/ui/switch";
 import { useAliasStore } from "@/lib/alias-store";
-import { Settings, Plus, Trash2, Edit, Check, X } from "lucide-react";
+import { Settings, Plus, Trash2, Edit, Check, X, XCircle } from "lucide-react";
 import { useState } from "react";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { LANG_CODE_TO_NAME } from "@/lib/constants";
+import { useSettingsStore } from "@/lib/settings-store";
 
 export function SettingsModal() {
   const { aliases, addAlias, removeAlias, editAlias } = useAliasStore();
+  const {
+    interests,
+    language,
+    isTtsEnabled,
+    setInterests,
+    setLanguage,
+    setIsTtsEnabled,
+  } = useSettingsStore();
 
   const [newIntegration, setNewIntegration] = useState<string>("");
   const [newName, setNewName] = useState<string>("");
@@ -27,6 +45,7 @@ export function SettingsModal() {
   const [editingKey, setEditingKey] = useState<string | null>(null);
   const [editName, setEditName] = useState<string>("");
   const [editValue, setEditValue] = useState<string>("");
+  const [newInterest, setNewInterest] = useState<string>("");
 
   const handleAddAlias = () => {
     if (!newIntegration.trim() || !newName.trim() || !newValue.trim()) return;
@@ -38,7 +57,7 @@ export function SettingsModal() {
 
   const handleEditStart = (
     integration: string,
-    alias: { name: string; value: string },
+    alias: { name: string; value: string }
   ) => {
     const editKey = `${integration}:${alias.name}`;
     setEditingKey(editKey);
@@ -61,7 +80,7 @@ export function SettingsModal() {
   };
 
   const activeIntegrations = Object.entries(aliases).filter(
-    ([, aliasList]) => aliasList && aliasList.length > 0,
+    ([, aliasList]) => aliasList && aliasList.length > 0
   );
 
   return (
@@ -69,16 +88,13 @@ export function SettingsModal() {
       <DialogTrigger asChild>
         <Button className="flex items-center gap-2" variant="outline">
           <Settings className="size-4" />
-          Add Params
+          Settings
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-[650px] max-h-[80vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Integration Parameters</DialogTitle>
-          <DialogDescription>
-            Manage your integration parameters and aliases. Add new parameters
-            or remove existing ones.
-          </DialogDescription>
+          <DialogTitle>Settings</DialogTitle>
+          <DialogDescription>Manage your settings here.</DialogDescription>
         </DialogHeader>
 
         <div className="space-y-6">
@@ -248,6 +264,98 @@ export function SettingsModal() {
             </div>
           </div>
         </div>
+
+        {/* General Settings Section */}
+        <div className="space-y-4">
+          <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wide">
+            General Settings
+          </h3>
+          <div className="space-y-4 p-4 border rounded-lg bg-muted/30">
+            {/* Interests Input */}
+            <div className="space-y-2">
+              <Label htmlFor="new-interest">Interests</Label>
+              <div className="flex items-center gap-2">
+                <Input
+                  id="new-interest"
+                  placeholder="e.g., football, harry potter, dogs"
+                  value={newInterest}
+                  onChange={(e) => setNewInterest(e.target.value)}
+                />
+                <Button
+                  type="button"
+                  size="sm"
+                  onClick={() => {
+                    if (newInterest.trim()) {
+                      setInterests([...interests, newInterest.trim()]);
+                      setNewInterest("");
+                    }
+                  }}
+                >
+                  Add
+                </Button>
+              </div>
+              <div className="flex flex-wrap gap-1 mt-2">
+                {interests &&
+                  interests.map((interest, index) => (
+                    <Button
+                      key={index}
+                      variant="secondary"
+                      size="sm"
+                      className="flex items-center gap-1 rounded-full"
+                      onClick={() => {
+                        const newInterests = [...interests];
+                        newInterests.splice(index, 1);
+                        setInterests(newInterests);
+                      }}
+                    >
+                      {interest}
+                      <XCircle className="h-3 w-3" />
+                    </Button>
+                  ))}
+              </div>
+            </div>
+
+            {/* Language Selection */}
+            <div className="space-y-2">
+              <Label htmlFor="language">Language</Label>
+              <Select
+                value={language}
+                onValueChange={(value) => setLanguage(value)}
+              >
+                <SelectTrigger className="w-[180px]">
+                  <SelectValue placeholder="Select a language" />
+                </SelectTrigger>
+                <SelectContent>
+                  {Object.entries(LANG_CODE_TO_NAME).map(([code, name]) => (
+                    <SelectItem key={code} value={code}>
+                      {name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* TTS Toggle */}
+            <div className="flex items-center justify-between">
+              <Label htmlFor="tts-toggle">Enable TTS</Label>
+              <Switch
+                id="tts-toggle"
+                checked={isTtsEnabled}
+                onCheckedChange={setIsTtsEnabled}
+              />
+            </div>
+          </div>
+        </div>
+
+        <pre>
+          <code>
+            {JSON.stringify(
+              { aliases, interests, language, isTtsEnabled },
+              null,
+              2
+            )}
+          </code>
+        </pre>
 
         <DialogFooter>
           <DialogClose asChild>

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { OpenAIToolSet } from "composio-core";
-import { Alias, IntegrationAliases  } from "@/lib/alias-store";
+import { Alias } from "@/lib/alias-store";
 import {
   SystemMessage,
   HumanMessage,
@@ -51,12 +51,8 @@ export async function POST(req: NextRequest) {
 
     let isToolUseNeeded = false;
 
-    const {
-      message,
-      aliases,
-      history
-    } = parsed.data;
-    
+    const { message, aliases, history, interests, language } = parsed.data;
+
     if (USE_TOOLS) {
       console.log("checking tool use intent");
       isToolUseNeeded = await checkToolUseIntent(message);
@@ -67,9 +63,9 @@ export async function POST(req: NextRequest) {
       const prompt = [
         new SystemMessage(
           SYSTEM_MESSAGES.LANGUAGE_LEARNING_CONVERSATION(
-            "medicine.",
+            interests || [],
             JSON.stringify(history),
-            LANG_CODE_TO_NAME[CONFIG.GOOGLE_SPEECH_LANG],
+            LANG_CODE_TO_NAME[language || "en-US"],
           ),
         ),
         new HumanMessage(message),
