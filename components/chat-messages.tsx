@@ -1,14 +1,20 @@
 import { useEffect, useRef } from "react";
 import { motion } from "framer-motion";
-import { BotIcon, UserIcon } from "lucide-react";
+import { BotIcon, UserIcon, Volume2 } from "lucide-react"; // Import Volume2 icon
 import { Message } from "@/hooks/use-chat";
+import { Button } from "@/components/ui/button"; // Import Button component
 
 interface ChatMessagesProps {
   messages: Message[];
   isLoading: boolean;
+  onReplayAudio: (message: Message) => void; // Add onReplayAudio prop
 }
 
-export function ChatMessages({ messages, isLoading }: ChatMessagesProps) {
+export function ChatMessages({
+  messages,
+  isLoading,
+  onReplayAudio,
+}: ChatMessagesProps) {
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const scrollToBottom = () => {
@@ -58,6 +64,18 @@ export function ChatMessages({ messages, isLoading }: ChatMessagesProps) {
             <div className="text-zinc-800 leading-relaxed">
               {message.content}
             </div>
+            {message.role === "assistant" && message.audioFilename && (
+              <Button
+                type="button"
+                onClick={() => onReplayAudio(message)}
+                size="icon"
+                variant="ghost"
+                className="size-7 rounded-full text-zinc-500 hover:bg-zinc-100"
+                aria-label="Replay audio"
+              >
+                <Volume2 size={16} />
+              </Button>
+            )}
           </div>
         </motion.div>
       ))}
@@ -77,4 +95,3 @@ export function ChatMessages({ messages, isLoading }: ChatMessagesProps) {
     </div>
   );
 }
-

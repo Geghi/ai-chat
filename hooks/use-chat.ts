@@ -5,6 +5,7 @@ export interface Message {
   id: string;
   role: "user" | "assistant";
   content: string;
+  audioFilename?: string;
 }
 
 export const useChat = () => {
@@ -13,7 +14,7 @@ export const useChat = () => {
   const { aliases } = useAliasStore();
 
   const sendMessage = useCallback(
-    async (text: string) => {
+    async (text: string): Promise<Message | null> => {
       if (!text.trim() || isLoading) return null;
 
       const userMessage: Message = {
@@ -38,23 +39,28 @@ export const useChat = () => {
             history: last5Messages,
           }),
         });
-        if (!response.ok) throw new Error("Failed to generate response");
-
         const result = await response.json();
+
+        if (!response.ok || result.error) {
+          throw new Error(result.error || "Failed to generate response");
+        }
+
         const botMessage: Message = {
           id: (Date.now() + 1).toString(),
           role: "assistant",
-          content: result.content,
+          content: result.data.content,
+          // audioFilename will be added after TTS playback
         };
 
         setMessages((prev) => [...prev, botMessage]);
         return botMessage;
       } catch (err) {
-        console.error("Error generating response:", err);
+        const error = err instanceof Error ? err : new Error("An unknown error occurred");
+        console.error("Error generating response:", error);
         const errorMessage: Message = {
           id: (Date.now() + 1).toString(),
           role: "assistant",
-          content: "Error generating response",
+          content: error.message,
         };
 
         setMessages((prev) => [...prev, errorMessage]);
@@ -66,9 +72,18 @@ export const useChat = () => {
     [aliases, isLoading, messages],
   );
 
+  const updateMessage = useCallback((updatedMessage: Message) => {
+    setMessages((prevMessages) =>
+      prevMessages.map((msg) =>
+        msg.id === updatedMessage.id ? updatedMessage : msg
+      )
+    );
+  }, []);
+
   return {
     messages,
     isLoading,
     sendMessage,
+    updateMessage,
   };
 };

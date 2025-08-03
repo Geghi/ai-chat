@@ -14,17 +14,31 @@ import { Phone } from "lucide-react";
 
 export function ChatInterfaceComponent() {
   const hasMounted = useMounted();
-  const { messages, isLoading, sendMessage } = useChat();
-  const { playAudio, stopAudio, isPlaying } = useAudio();
+  const { messages, isLoading, sendMessage, updateMessage } = useChat();
+  const { playAudio, stopAudio, isPlaying, playAudioFromUrl } = useAudio();
 
   const handleProcessMessage = useCallback(
     async (text: string) => {
       const botMessage = await sendMessage(text);
       if (botMessage) {
-        await playAudio(botMessage.content);
+        const filename = await playAudio(botMessage.content);
+        if (filename) {
+          updateMessage({ ...botMessage, audioFilename: filename });
+        }
       }
     },
-    [sendMessage, playAudio]
+    [sendMessage, playAudio, updateMessage]
+  );
+
+  const handleReplayAudio = useCallback(
+    (message: { content: string; audioFilename?: string }) => {
+      if (message.audioFilename) {
+        playAudioFromUrl(`/api/audio/${message.audioFilename}`);
+      } else {
+        playAudio(message.content);
+      }
+    },
+    [playAudio, playAudioFromUrl]
   );
 
   const onUserSpeech = useCallback(() => {
@@ -48,26 +62,29 @@ export function ChatInterfaceComponent() {
     isPlaying,
   });
 
-  const handleMicClick = () => {
+  const handleMicClick = useCallback(() => {
     if (listening) {
       stopListening();
     } else {
       startListening();
     }
-  };
+  }, [listening, startListening, stopListening]);
 
-  const handlePhoneClick = () => {
+  const handlePhoneClick = useCallback(() => {
     if (isCalling) {
       stopCall();
     } else {
       startCall();
     }
-  };
+  }, [isCalling, startCall, stopCall]);
 
-  const handleInputSubmit = async (message: string) => {
-    resetTranscript();
-    await handleProcessMessage(message);
-  };
+  const handleInputSubmit = useCallback(
+    async (message: string) => {
+      resetTranscript();
+      await handleProcessMessage(message);
+    },
+    [handleProcessMessage, resetTranscript]
+  );
 
   if (!hasMounted) return null;
 
@@ -106,7 +123,11 @@ export function ChatInterfaceComponent() {
       <ChatHeader />
 
       <main className="flex-1 overflow-y-auto pt-20 pb-28">
-        <ChatMessages messages={messages} isLoading={isLoading} />
+        <ChatMessages
+          messages={messages}
+          isLoading={isLoading}
+          onReplayAudio={handleReplayAudio}
+        />
       </main>
 
       <div className="flex flex-col items-center justify-center pb-4 w-full">

@@ -4,7 +4,15 @@ export const CONFIG = {
   OPENAI_MODEL: "gpt-4o-mini",
   TTS_MODEL: "tts-1",
   TTS_VOICE: "nova" as const,
+  GOOGLE_SPEECH_LANG: "en-US",
 } as const;
+
+export const LANG_CODE_TO_NAME: { [key: string]: string } = {
+  "en-US": "English",
+  "it-IT": "Italian",
+  "es-ES": "Spanish",
+  "fr-FR": "French",
+};
 
 export const SYSTEM_MESSAGES = {
   INTENT_CLASSIFICATION: `You are an intent classification expert. Your job is to
@@ -15,7 +23,7 @@ conversational question (like 'hello', 'what is the capital of France?').
     - If it's an action, classify as 'TOOL_USE'.
     - If it's a general question or greeting, classify as 'GENERAL_CHAT'.`,
 
-  LANGUAGE_LEARNING_CONVERSATION: (userInterests: string, conversationHistory: string) => `
+  LANGUAGE_LEARNING_CONVERSATION: (userInterests: string, conversationHistory: string, langCode: string) => `
 You are a friendly and skilled AI English language tutor. Your purpose is to help the user improve their spoken English fluency through natural, engaging, and context-aware conversation.
 
 **Your Role:**  
@@ -53,6 +61,7 @@ You are a friendly and skilled AI English language tutor. Your purpose is to hel
    - Keep the dialogue moving.  
    - If a topic ends, shift smoothly to a **related or interest-based** topic.
 
+EXTREMELY IMPORTANT: Do not EVER, for ANY Reason use a different language than ${langCode}, even if the user is speaking another language, always respond in ${langCode}.
 Let’s begin. Say hello and ask an open-ended question based on the user's interests.
 `,
 

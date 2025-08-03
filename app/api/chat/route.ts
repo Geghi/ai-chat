@@ -12,7 +12,7 @@ import { ChatOpenAI } from "@langchain/openai";
 import { messageSchema } from "@/lib/validators/message";
 import { ChatCompletionMessageToolCall } from "openai/resources/chat/completions.mjs";
 import { v4 as uuidv4 } from "uuid";
-import { CONFIG, SYSTEM_MESSAGES } from "@/lib/constants";
+import { CONFIG, LANG_CODE_TO_NAME, SYSTEM_MESSAGES } from "@/lib/constants";
 import { handleApiError, logError } from "@/lib/error-handler";
 
 const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
@@ -42,6 +42,7 @@ export async function POST(req: NextRequest) {
     if (!parsed.success) {
       return NextResponse.json(
         {
+          data: null,
           error: parsed.error.message,
         },
         { status: 400 },
@@ -66,8 +67,9 @@ export async function POST(req: NextRequest) {
       const prompt = [
         new SystemMessage(
           SYSTEM_MESSAGES.LANGUAGE_LEARNING_CONVERSATION(
-            "league of legends, artificial intelligence, calisthenics.",
+            "medicine.",
             JSON.stringify(history),
+            LANG_CODE_TO_NAME[CONFIG.GOOGLE_SPEECH_LANG],
           ),
         ),
         new HumanMessage(message),
@@ -75,7 +77,8 @@ export async function POST(req: NextRequest) {
       console.log(prompt);
       const chatResponse = await llm.invoke(prompt);
       return NextResponse.json({
-        content: chatResponse.content,
+        data: { content: chatResponse.content },
+        error: null,
       });
     }
 
@@ -83,16 +86,22 @@ export async function POST(req: NextRequest) {
     const availableApps = Object.keys(aliases);
     if (availableApps.length === 0) {
       return NextResponse.json({
-        content: `I can't perform any actions yet. Please add some integration
+        data: {
+          content: `I can't perform any actions yet. Please add some integration
 parameters in the settings first.`,
+        },
+        error: null,
       });
     }
 
     const targetApps = await identifyTargetApps(message, availableApps);
     if (targetApps.length === 0) {
       return NextResponse.json({
-        content: `I can't perform any actions yet. Please add some integration
+        data: {
+          content: `I can't perform any actions yet. Please add some integration
 parameters in the settings first.`,
+        },
+        error: null,
       });
     }
 
@@ -104,8 +113,11 @@ parameters in the settings first.`,
           `User mentioned app '${app}' but no aliases are configured.`,
         );
         return NextResponse.json({
-          content: `To work with ${app}, you first need to add its required
+          data: {
+            content: `To work with ${app}, you first need to add its required
 parameters (like a channel ID or URL) in the settings.`,
+          },
+          error: null,
         });
       }
     }
@@ -131,12 +143,12 @@ parameters (like a channel ID or URL) in the settings.`,
       contextualizedMessage,
       targetApps,
     );
-    return NextResponse.json({ content: finalResponse });
+    return NextResponse.json({ data: { content: finalResponse }, error: null });
   } catch (error) {
     logError(error, "API /chat");
     const { message, statusCode } = handleApiError(error);
     return NextResponse.json(
-      { content: `Sorry, I encountered an error: ${message}` },
+      { data: null, error: `Sorry, I encountered an error: ${message}` },
       { status: statusCode },
     );
   }

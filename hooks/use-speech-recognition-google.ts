@@ -62,13 +62,11 @@ export const useSpeechRecognitionWithGoogle = ({
           body: JSON.stringify({ audio: base64Audio }),
         });
 
-        if (response.ok) {
-          const data = await response.json();
-          if (data.transcription) {
-            onTranscriptComplete(data.transcription);
-          }
+        const result = await response.json();
+        if (response.ok && result.data?.transcription) {
+          onTranscriptComplete(result.data.transcription);
         } else {
-          console.error("Failed to transcribe audio");
+          console.error("Failed to transcribe audio:", result.error);
         }
       };
     } catch (error) {
@@ -114,31 +112,31 @@ export const useSpeechRecognitionWithGoogle = ({
     stopRecording,
   ]);
 
-  const startListening = () => {
+  const startListening = useCallback(() => {
     resetTranscript();
     lastProcessedTranscript.current = "";
     startRecording();
     SpeechRecognition.startListening({
       continuous: true,
     });
-  };
+  }, [resetTranscript, startRecording]);
 
-  const stopListening = () => {
+  const stopListening = useCallback(() => {
     if (listening) {
       SpeechRecognition.stopListening();
       stopRecording();
     }
-  };
+  }, [listening, stopRecording]);
 
-  const startCall = () => {
+  const startCall = useCallback(() => {
     setIsCalling(true);
     startListening();
-  };
+  }, [startListening]);
 
-  const stopCall = () => {
+  const stopCall = useCallback(() => {
     setIsCalling(false);
     stopListening();
-  };
+  }, [stopListening]);
 
   return {
     transcript,

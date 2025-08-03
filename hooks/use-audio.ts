@@ -5,6 +5,34 @@ export const useAudio = () => {
   const currentSourceRef = useRef<AudioBufferSourceNode | null>(null);
   const audioContextRef = useRef<AudioContext | null>(null);
 
+  const playAudioFromUrl = useCallback(async (url: string) => {
+    try {
+      stopAudio();
+      const response = await fetch(url);
+      if (!response.ok) {
+        throw new Error(`Failed to fetch audio from ${url}`);
+      }
+      const audioData = await response.arrayBuffer();
+      const AudioContext = window.AudioContext || (window as any).webkitAudioContext;
+      const audioContext = new AudioContext();
+      audioContextRef.current = audioContext;
+      const audioBuffer = await audioContext.decodeAudioData(audioData);
+      const source = audioContext.createBufferSource();
+      currentSourceRef.current = source;
+      source.buffer = audioBuffer;
+      source.connect(audioContext.destination);
+      setIsPlaying(true);
+      source.onended = () => {
+        setIsPlaying(false);
+        currentSourceRef.current = null;
+      };
+      source.start(0);
+    } catch (error) {
+      console.error("Error playing audio from URL:", error);
+      setIsPlaying(false);
+    }
+  }, []);
+
   const stopAudio = useCallback(() => {
     if (currentSourceRef.current) {
       try {
@@ -18,7 +46,7 @@ export const useAudio = () => {
   }, []);
 
   const playAudio = useCallback(
-    async (text: string) => {
+    async (text: string): Promise<string | null> => {
       try {
         stopAudio();
 
@@ -27,7 +55,14 @@ export const useAudio = () => {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ text }),
         });
-        if (!response.ok) throw new Error("Failed to generate audio");
+
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.error || "Failed to generate audio");
+        }
+
+        const audioData = await response.arrayBuffer();
+        const filename = response.headers.get("x-audio-filename");
 
         const AudioContext =
           // eslint-disable-next-line  @typescript-eslint/no-explicit-any
@@ -35,7 +70,6 @@ export const useAudio = () => {
         const audioContext = new AudioContext();
         audioContextRef.current = audioContext;
 
-        const audioData = await response.arrayBuffer();
         const audioBuffer = await audioContext.decodeAudioData(audioData);
         const source = audioContext.createBufferSource();
         currentSourceRef.current = source;
@@ -51,14 +85,16 @@ export const useAudio = () => {
         };
 
         source.start(0);
+        return filename;
       } catch (error) {
         console.error("Error playing audio:", error);
         setIsPlaying(false);
         currentSourceRef.current = null;
+        return null;
       }
     },
     [stopAudio],
   );
 
-  return { playAudio, stopAudio, isPlaying };
+  return { playAudio, stopAudio, isPlaying, playAudioFromUrl };
 };
