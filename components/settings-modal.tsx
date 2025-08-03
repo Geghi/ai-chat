@@ -16,7 +16,7 @@ import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { Switch } from "@/components/ui/switch";
 import { useAliasStore } from "@/lib/alias-store";
-import { Settings, Plus, Trash2, Edit, Check, X, XCircle } from "lucide-react";
+import { Settings, Trash2, Edit, Check, X, XCircle } from "lucide-react";
 import { useState } from "react";
 import {
   Select,
@@ -47,6 +47,7 @@ export function SettingsModal() {
   const [editValue, setEditValue] = useState<string>("");
   const [newInterest, setNewInterest] = useState<string>("");
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const handleAddAlias = () => {
     if (!newIntegration.trim() || !newName.trim() || !newValue.trim()) return;
     addAlias(newIntegration, { name: newName, value: newValue });
@@ -217,7 +218,7 @@ export function SettingsModal() {
 
           {activeIntegrations.length > 0 && <Separator />}
 
-          <div className="space-y-4">
+          {/* <div className="space-y-4">
             <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wide">
               Add New Parameter
             </h3>
@@ -262,7 +263,7 @@ export function SettingsModal() {
                 Add Parameter
               </Button>
             </div>
-          </div>
+          </div> */}
         </div>
 
         {/* General Settings Section */}
@@ -347,15 +348,17 @@ export function SettingsModal() {
           </div>
         </div>
 
-        <pre>
-          <code>
-            {JSON.stringify(
-              { aliases, interests, language, isTtsEnabled },
-              null,
-              2
-            )}
-          </code>
-        </pre>
+        {process.env.NODE_ENV === "development" && (
+          <pre>
+            <code>
+              {JSON.stringify(
+                { aliases, interests, language, isTtsEnabled },
+                null,
+                2
+              )}
+            </code>
+          </pre>
+        )}
 
         <DialogFooter>
           <DialogClose asChild>

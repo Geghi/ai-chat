@@ -37,8 +37,9 @@ export function ChatMessages({
               How can I help you today?
             </h2>
             <p>
-              Use the microphone to speak or type your command below. You can
-              configure shortcuts for IDs and URLs in the{" "}
+              Use the call button to start a live call, use microphone to speak
+              or type your command below. You can configure interests and
+              language from the{" "}
               <span className="font-semibold text-zinc-600">settings</span>{" "}
               menu.
             </p>
