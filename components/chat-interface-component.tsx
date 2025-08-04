@@ -6,7 +6,8 @@ import { Message, useChat } from "@/hooks/use-chat";
 import { useAudio } from "@/hooks/use-audio";
 import { useSettingsStore } from "@/lib/settings-store";
 // import { useSpeechRecognitionWithDebounce } from "@/hooks/use-speech-recognition";
-import { useSpeechRecognitionWithGoogle } from "@/hooks/use-speech-recognition-google";
+// import { useSpeechRecognitionWithGoogle } from "@/hooks/use-speech-recognition-google";
+import { useSpeechRecognitionWithDeepgram } from "@/hooks/use-speech-recognition-deepgram";
 import { ChatHeader } from "@/components/chat-header";
 import { ChatMessages } from "@/components/chat-messages";
 import { ChatInput } from "@/components/chat-input";
@@ -61,7 +62,7 @@ export function ChatInterfaceComponent() {
     stopListening,
     startCall,
     stopCall,
-  } = useSpeechRecognitionWithGoogle({
+  } = useSpeechRecognitionWithDeepgram({
     onTranscriptComplete: handleProcessMessage,
     onUserSpeech,
     isPlaying,
