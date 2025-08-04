@@ -34,9 +34,11 @@ export function SettingsModal() {
     interests,
     language,
     isTtsEnabled,
+    transcriptionProvider,
     setInterests,
     setLanguage,
     setIsTtsEnabled,
+    setTranscriptionProvider,
   } = useSettingsStore();
 
   const [newIntegration, setNewIntegration] = useState<string>("");
@@ -336,6 +338,27 @@ export function SettingsModal() {
               </Select>
             </div>
 
+            {/* Transcription Provider Selection */}
+            <div className="space-y-2">
+              <Label htmlFor="transcription-provider">
+                Transcription Provider
+              </Label>
+              <Select
+                value={transcriptionProvider}
+                onValueChange={(value) =>
+                  setTranscriptionProvider(value as "google" | "deepgram")
+                }
+              >
+                <SelectTrigger className="w-[180px]">
+                  <SelectValue placeholder="Select a provider" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="google">Google</SelectItem>
+                  <SelectItem value="deepgram">Deepgram</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
             {/* TTS Toggle */}
             <div className="flex items-center justify-between">
               <Label htmlFor="tts-toggle">Enable TTS</Label>
@@ -352,7 +375,13 @@ export function SettingsModal() {
           <pre>
             <code>
               {JSON.stringify(
-                { aliases, interests, language, isTtsEnabled },
+                {
+                  aliases,
+                  interests,
+                  language,
+                  isTtsEnabled,
+                  transcriptionProvider,
+                },
                 null,
                 2
               )}
